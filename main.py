@@ -3,10 +3,19 @@ import praw
 import sys
 import tldextract
 
+'''
+Dockerize this on Ubuntu Server 20.04 LTS
+
+sudo apt-get update
+sudo apt install python3-pip
+pip3 install discord praw tldextract
+git clone https://github.com/justinksung/bot-chan
+nohup bot-chan main.py <args> &
+'''
 
 DISCORD_GUILD_ID = 735642741182169159  # FGO server
 DISCORD_CHANNEL_ID = [
-    774160071407697930,  # link-extractor-test channel
+    774160071407697930,  # bot-chan-test channel
     760212029901504573,  # FGO #fanart channel
     766729741599244288,  # Genshin Impact #fanart channel
 ]
@@ -59,7 +68,6 @@ async def extract_images_from_reddit_submission(message):
         print(f'skipping non-image reddit submission {submission.id}')
 
 
-# args: <Discord Token>
 if len(sys.argv) != 4:
     print("Usage: main.py <Discord Token> <Reddit OAuth ID> <Reddit OAuth Secret>")
 else:
