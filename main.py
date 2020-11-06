@@ -1,9 +1,9 @@
 import discord
 import praw
+import sys
 import tldextract
 
 
-DISCORD_TOKEN = 'NTQyNTE1MDk0Nzk0NTM0OTEz.XFo2jg.mz_momDg6_XymJNZh-SwJ9BR1sk'
 DISCORD_GUILD_ID = 735642741182169159  # FGO server
 DISCORD_CHANNEL_ID = [
     774160071407697930,  # link-extractor-test channel
@@ -58,4 +58,9 @@ async def extract_images_from_reddit_submission(message):
     else:
         print(f'skipping non-image reddit submission {submission.id}')
 
-discord_client.run(DISCORD_TOKEN)
+
+# args: <Discord Token>
+if len(sys.argv) != 4:
+    print("Usage: main.py <Discord Token> <Reddit OAuth ID> <Reddit OAuth Secret>")
+else:
+    discord_client.run(sys.argv[1])
