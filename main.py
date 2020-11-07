@@ -1,5 +1,4 @@
 import discord
-import os
 import pathlib
 import pixivapi
 import praw
@@ -14,31 +13,25 @@ Dockerize this on Ubuntu Server 20.04 LTS
 
 sudo apt-get update
 sudo apt install python3-pip
-pip3 install discord praw tldextract pixiv-api
+pip3 install discord praw pixiv-api tldextract 
 git clone https://github.com/justinksung/bot-chan
 nohup bot-chan main.py <args> &
 '''
 
 DISCORD_GUILD_ID = 735642741182169159  # FGO server
 DISCORD_CHANNEL_ID = [
-    774160071407697930,  # bot-chan-test channel
-    # 760212029901504573,  # FGO #fanart channel
-    # 766729741599244288,  # Genshin Impact #fanart channel
+    #774160071407697930,  # bot-chan-test channel
+    760212029901504573,  # FGO #fanart channel
+    766729741599244288,  # Genshin Impact #fanart channel
 ]
 
-REDDIT_CLIENT_ID = 'mIs_r11zpS9AEg'
-REDDIT_CLIENT_SECRET = 'gtGCzaPKDjkerwDHpByMU9abo4IvCA'
 REDDIT_DOMAIN = 'reddit.com'
 REDDIT_USER_AGENT = 'AWS:Discord Image Extractor:0.1 (by u/xmangoslushie)'
 
 discord_client = discord.Client()
 pixiv_client = pixivapi.Client()
 pixiv_refresh_token = None
-reddit_client = praw.Reddit(
-    client_id=REDDIT_CLIENT_ID,
-    client_secret=REDDIT_CLIENT_SECRET,
-    user_agent=REDDIT_USER_AGENT
-)
+reddit_client = None
 
 
 @discord_client.event
@@ -54,8 +47,8 @@ async def on_message(message):
         return
     elif tldextract.extract(message.content).registered_domain == 'pixiv.net':
         await on_pixiv_message(message)
-    # elif tldextract.extract(message.content).registered_domain == 'reddit.com':
-    #    await on_reddit_message(message)
+    elif tldextract.extract(message.content).registered_domain == 'reddit.com':
+        await on_reddit_message(message)
     else:
         msg = 'not from reddit, behavior not implemented'
         print(msg)
@@ -70,12 +63,21 @@ def is_valid_guild_msg(message):
         return True
 
 
+def pixiv_authenticate(username, password):
+    pixiv_client.login(username, password)
+    return pixiv_client.refresh_token
+
+
 async def on_pixiv_message(message):
     path = urlparse(message.content).path.split("/")
     type = path[-2]
     id = int(path[-1])
     if type == 'artworks':
-        illustration = pixiv_client.fetch_illustration(id)
+        try:
+            illustration = pixiv_client.fetch_illustration(id)
+        except pixivapi.LoginError:
+            pixiv_client.login(sys.argv[4], sys.argv[5])
+            illustration = pixiv_client.fetch_illustration(id)
 
         sizes = illustration.image_urls.keys()
         size_to_download = None
@@ -92,7 +94,10 @@ async def on_pixiv_message(message):
                 temp_filename = str(uuid.uuid4())
                 illustration.download(temp_dirpath, filename=temp_filename)
 
-                temp_filepath = os.path.join(temp_dirname, temp_filename)
+                temp_filepath = None
+                for x in temp_dirpath.iterdir():
+                    temp_filepath = x
+                    break
                 print(f'downloaded illustration {id} to {temp_filepath}')
 
                 f = open(temp_filepath)
@@ -113,9 +118,13 @@ async def on_reddit_message(message):
         print(f'DEBUG skipping non-image reddit submission {submission.id}')
 
 
-if len(sys.argv) != 4:
-    print("Usage: main.py <Discord Token> <Reddit OAuth ID> <Reddit OAuth Secret>")
+if len(sys.argv) != 6:
+    print("Usage: main.py <Discord Token> <Reddit OAuth ID> <Reddit OAuth Secret> <Pixiv Username> <Pixiv Password>")
 else:
-    pixiv_client.login('justinksung@gmail.com', 'Aura_[Pixiv]')
-    pixiv_refresh_token = pixiv_client.refresh_token
+    reddit_client = praw.Reddit(
+        client_id=sys.argv[2],
+        client_secret=sys.argv[3],
+        user_agent=REDDIT_USER_AGENT
+    )
+    pixiv_client.login(sys.argv[4], sys.argv[5])
     discord_client.run(sys.argv[1])
