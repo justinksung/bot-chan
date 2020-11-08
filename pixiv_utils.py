@@ -35,6 +35,7 @@ async def on_message(message, test_mode):
         try:
             illustration = client.fetch_illustration(id)
         except pixivapi.LoginError:
+            log_utils.get_logger(test_mode).info(f"need to reauthenticate, {refresh_token} is stale")
             client.authenticate()
             illustration = client.fetch_illustration(id)
 
