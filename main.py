@@ -19,7 +19,7 @@ cd bot-chan
 nohup python3 main.py <args> &
 '''
 
-TEST_MODE = True
+TEST_MODE = False
 discord_client = discord.Client()
 
 
