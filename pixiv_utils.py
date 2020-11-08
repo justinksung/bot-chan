@@ -1,9 +1,10 @@
-import discord
 import pathlib
-import pixivapi
 import tempfile
 import uuid
 from urllib.parse import urlparse
+
+import discord
+import pixivapi
 
 import log_utils
 
@@ -64,6 +65,7 @@ async def on_message(message, test_mode):
                     to_send = discord.File(temp_filepath)
                     await message.channel.send(file=to_send)
         else:
-            log_utils.get_logger(test_mode).debug(f'DEBUG illustration id={id} has no appropriate sizes image_urls={illustration.image_urls}')
+            log_utils.get_logger(test_mode).debug(
+                f'DEBUG illustration id={id} has no appropriate sizes image_urls={illustration.image_urls}')
     else:
         log_utils.get_logger(test_mode).debug(f'DEBUG skipping non-illustration pixiv model type={type} id={id}')

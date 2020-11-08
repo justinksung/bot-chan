@@ -2,7 +2,6 @@ import praw
 
 import log_utils
 
-
 client = None
 
 
@@ -13,6 +12,7 @@ def init(client_id, client_secret):
         client_secret=client_secret,
         user_agent='AWS:Discord Image Extractor:0.1 (by u/xmangoslushie)'
     )
+
 
 async def on_message(message, test_mode):
     submission = client.submission(url=message.content)

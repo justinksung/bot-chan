@@ -1,6 +1,7 @@
+import sys
+
 import discord
 import pixivapi
-import sys
 import tldextract
 
 import log_utils
@@ -12,10 +13,11 @@ Dockerize this on Ubuntu Server 20.04 LTS
 
 sudo apt-get update
 sudo apt install python3-pip
-pip3 install discord praw pixiv-api tldextract 
+pip3 install configmanager discord praw pixiv-api tldextract 
 git clone https://github.com/justinksung/bot-chan
-nohup bot-chan main.py <args> &
+python3 bot-chan/main.py <args> &
 '''
+
 TEST_MODE = False
 discord_client = discord.Client()
 
@@ -51,7 +53,7 @@ def is_valid_guild_msg(message):
 def channels_to_subscribe():
     test_channels = [
         774160071407697930,  # Text Channels / #bot-chan-test
-     ]
+    ]
     live_channels = [
         760212029901504573,  # FGO / #fanart
         766729741599244288,  # Genshin Impact / #fanart

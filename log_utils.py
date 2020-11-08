@@ -2,7 +2,7 @@ import logging.config
 
 
 def load_config():
-    logging.config.fileConfig('logging.conf')
+    logging.config.fileConfig('config/logging.conf')
 
 
 def get_logger(test_mode):
