@@ -15,7 +15,8 @@ sudo apt-get update
 sudo apt install python3-pip
 pip3 install configmanager discord praw pixiv-api tldextract 
 git clone https://github.com/justinksung/bot-chan
-python3 bot-chan/main.py <args> &
+cd bot-chan
+nohup python3 main.py <args> &
 '''
 
 TEST_MODE = False
