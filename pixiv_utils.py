@@ -10,15 +10,21 @@ import log_utils
 
 client = None
 refresh_token = None
+logger = None
+test_mode = False
 
 
-def init(pixiv_client, username, password):
+def init(pixiv_client, username, password, test_md):
     pixiv_client.login(username, password)
 
     global client
     client = pixiv_client
     global refresh_token
     refresh_token = pixiv_client.refresh_token
+    global logger
+    logger = log_utils.get_logger(test_md)
+    global test_mode
+    test_mode = test_md
 
 
 def authenticate():
@@ -27,17 +33,21 @@ def authenticate():
     refresh_token = client.refresh_token
 
 
-async def on_message(message, test_mode):
+async def on_message(message):
     path = urlparse(message.content).path.split("/")
     type = path[-2]
     id = int(path[-1])
     if type == 'artworks':
         try:
+            logger.info(f'fetching artwork id={id}')
             illustration = client.fetch_illustration(id)
-        except pixivapi.LoginError:
-            log_utils.get_logger(test_mode).info(f"need to reauthenticate, {refresh_token} is stale")
+        except pixivapi.LoginError as l:
+            logger.info('initial fetch failed, need to re-authenticate')
             client.authenticate()
             illustration = client.fetch_illustration(id)
+        except Exception as e:
+            logger.error(e)
+            raise e
 
         sizes = illustration.image_urls.keys()
         size_to_download = None
@@ -58,15 +68,15 @@ async def on_message(message, test_mode):
                 for x in temp_dirpath.iterdir():
                     temp_filepath = x
                     break
-                log_utils.get_logger(test_mode).debug(f'downloaded illustration {id} to {temp_filepath}')
+                logger.debug(f'downloaded illustration {id} to {temp_filepath}')
 
                 if test_mode:
-                    log_utils.get_logger(test_mode).info(f'message.channel.send(file={temp_filepath})')
+                    logger.info(f'message.channel.send(file={temp_filepath})')
                 else:
                     to_send = discord.File(temp_filepath)
                     await message.channel.send(file=to_send)
         else:
-            log_utils.get_logger(test_mode).debug(
+            logger.debug(
                 f'DEBUG illustration id={id} has no appropriate sizes image_urls={illustration.image_urls}')
     else:
-        log_utils.get_logger(test_mode).debug(f'DEBUG skipping non-illustration pixiv model type={type} id={id}')
+        logger.debug(f'DEBUG skipping non-illustration pixiv model type={type} id={id}')
