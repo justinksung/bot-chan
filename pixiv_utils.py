@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 
 import discord
 import pixivapi
+from requests import RequestException
 
 import log_utils
 
@@ -30,6 +31,7 @@ def init(pixiv_client, username, password, test_md):
 def authenticate():
     global refresh_token
     client.authenticate(refresh_token)
+    logger.debug(f'replacing old refresh token {refresh_token} with {client.refresh_token}')
     refresh_token = client.refresh_token
 
 
@@ -41,8 +43,8 @@ async def on_message(message):
         try:
             logger.info(f'fetching artwork id={id}')
             illustration = client.fetch_illustration(id)
-        except pixivapi.LoginError as l:
-            logger.info('initial fetch failed, need to re-authenticate')
+        except RequestException as r:
+            logger.warn(r)
             client.authenticate()
             illustration = client.fetch_illustration(id)
         except Exception as e:

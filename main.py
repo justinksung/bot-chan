@@ -33,13 +33,13 @@ async def on_message(message):
     if not is_valid_guild_msg(message):
         return
     elif tldextract.extract(message.content).registered_domain == 'pixiv.net':
-        logger.debug(f"routed {message.content} to pixiv handler")
+        logger.debug(f"routed message id={message.id} to pixiv handler")
         await pixiv_utils.on_message(message)
     elif tldextract.extract(message.content).registered_domain == 'reddit.com':
-        logger.debug(f"routed {message.content} to reddit handler")
-        await reddit_utils.on_message(message, TEST_MODE)
+        logger.debug(f"routed message id={message.id} to reddit handler")
+        await reddit_utils.on_message(message)
     else:
-        logger.debug(f'Unsupported messsage {message.content}')
+        logger.debug(f'Unsupported messsage id={message.id}')
 
 
 def is_valid_guild_msg(message):
