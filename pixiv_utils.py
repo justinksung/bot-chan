@@ -73,6 +73,7 @@ async def on_message(message):
                 if test_mode:
                     logger.info(f'message.channel.send(file={temp_filepath})')
                 else:
+                    logger.debug(f'message.channel.send(file={temp_filepath})')
                     to_send = discord.File(temp_filepath)
                     await message.channel.send(file=to_send)
         else:
