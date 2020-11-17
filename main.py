@@ -8,18 +8,22 @@ import log_utils
 import pixiv_utils
 import reddit_utils
 
+from datetime import datetime
+from pytz import timezone, utc
+
+
 '''
 Dockerize this on Ubuntu Server 20.04 LTS
 
 sudo apt-get update
 sudo apt install python3-pip
-pip3 install configmanager discord praw pixiv-api tldextract 
+pip3 install configmanager discord praw pixiv-api tldextract pytz
 git clone https://github.com/justinksung/bot-chan
 cd bot-chan
 nohup python3 main.py <args> &
 '''
 
-TEST_MODE = False
+TEST_MODE = True
 discord_client = discord.Client()
 
 
@@ -34,10 +38,10 @@ async def on_message(message):
         return
     elif tldextract.extract(message.content).registered_domain == 'pixiv.net':
         logger.debug(f"routed message id={message.id} to pixiv handler")
-        await pixiv_utils.on_message(message)
+        await pixiv_utils.on_message(message, is_sfw_hours())
     elif tldextract.extract(message.content).registered_domain == 'reddit.com':
         logger.debug(f"routed message id={message.id} to reddit handler")
-        await reddit_utils.on_message(message)
+        await reddit_utils.on_message(message, is_sfw_hours())
     else:
         logger.debug(f'Unsupported messsage id={message.id}')
 
@@ -62,6 +66,11 @@ def channels_to_subscribe():
         766729741599244288,  # Genshin Impact / #fanart
     ]
     return test_channels if TEST_MODE else live_channels
+
+
+def is_sfw_hours(current=None):
+    time = current if current is not None else datetime.now(tz=utc).astimezone(timezone('US/Pacific'))
+    return 7 <= time.hour <= 18
 
 
 if len(sys.argv) != 6:

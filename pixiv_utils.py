@@ -34,34 +34,21 @@ def authenticate():
     refresh_token = client.refresh_token
 
 
-async def on_message(message):
+async def on_message(message, sfw_override):
     path = urlparse(message.content).path.split("/")
     type = path[-2]
     id = int(path[-1])
+
     if type == 'artworks':
-        try:
-            logger.info(f'fetching artwork id={id}')
-            illustration = client.fetch_illustration(id)
-        except Exception as e:
-            logger.info(f're-attempting fetch of artwork id={id} because of error="{e}"')
-            authenticate()
-            illustration = client.fetch_illustration(id)
-        if illustration is None:
-            raise Exception("could not fetching artwork id={id}")
-
-        sizes = illustration.image_urls.keys()
-        size_to_download = None
-        if pixivapi.Size.MEDIUM in sizes:
-            size_to_download = pixivapi.Size.MEDIUM
-        elif pixivapi.Size.LARGE in sizes:
-            size_to_download = pixivapi.Size.LARGE
-        elif pixivapi.Size.ORIGINAL in sizes:
-            size_to_download = pixivapi.Size.ORIGINAL
-
+        illustration = fetch_illustration(id)
+        tag_spoiler = sfw_override or illustration.x_restrict == 1
+        size_to_download = size_to_dl(illustration)
         if size_to_download is not None:
             with tempfile.TemporaryDirectory() as temp_dirname:
                 temp_dirpath = pathlib.Path(temp_dirname)
                 temp_filename = str(uuid.uuid4())
+                if tag_spoiler:
+                    temp_filename = 'SPOILER_' + temp_filename
                 illustration.download(temp_dirpath, size=size_to_download, filename=temp_filename)
 
                 temp_filepath = None
@@ -70,14 +57,37 @@ async def on_message(message):
                     break
                 logger.debug(f'downloaded illustration {id} to {temp_filepath}')
 
-                if test_mode:
-                    logger.info(f'message.channel.send(file={temp_filepath})')
-                else:
-                    logger.debug(f'message.channel.send(file={temp_filepath})')
-                    to_send = discord.File(temp_filepath)
-                    await message.channel.send(file=to_send)
+                to_send = discord.File(temp_filepath)
+                await message.channel.send(file=to_send)
         else:
             logger.debug(
                 f'DEBUG illustration id={id} has no appropriate sizes image_urls={illustration.image_urls}')
     else:
         logger.debug(f'DEBUG skipping non-illustration pixiv model type={type} id={id}')
+
+
+def fetch_illustration(illustration_id):
+    try:
+        logger.info(f'fetching artwork id={illustration_id}')
+        illustration = client.fetch_illustration(illustration_id)
+    except Exception as e:
+        logger.info(f're-attempting fetch of artwork id={illustration_id} because of error="{e}"')
+        authenticate()
+        illustration = client.fetch_illustration(illustration_id)
+    if illustration is None:
+        raise Exception("could not fetching artwork id={id}")
+    else:
+        return illustration
+
+
+def size_to_dl(illustration):
+    sizes = illustration.image_urls.keys()
+    if pixivapi.Size.MEDIUM in sizes:
+        size_to_download = pixivapi.Size.MEDIUM
+    elif pixivapi.Size.LARGE in sizes:
+        size_to_download = pixivapi.Size.LARGE
+    elif pixivapi.Size.ORIGINAL in sizes:
+        size_to_download = pixivapi.Size.ORIGINAL
+    else:
+        size_to_download = None
+    return size_to_download

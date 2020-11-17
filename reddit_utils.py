@@ -20,12 +20,9 @@ def init(client_id, client_secret, test_md):
     test_mode = test_md
 
 
-async def on_message(message):
+async def on_message(message, sfw_override):
     submission = client.submission(url=message.content)
     if hasattr(submission, 'post_hint') and submission.post_hint == 'image':
-        if test_mode:
-            logger.info(f'message.channel.send({submission.url})')
-        else:
-            await message.channel.send(submission.url)
+        await message.channel.send(submission.url)
     else:
         logger.debug(f'DEBUG skipping non-image reddit submission {submission.id}')
