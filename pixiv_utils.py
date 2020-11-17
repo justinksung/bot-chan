@@ -51,10 +51,7 @@ async def on_message(message, sfw_override):
                     temp_filename = 'SPOILER_' + temp_filename
                 illustration.download(temp_dirpath, size=size_to_download, filename=temp_filename)
 
-                temp_filepath = None
-                for x in temp_dirpath.iterdir():
-                    temp_filepath = x
-                    break
+                temp_filepath = get_first_child(temp_dirpath)
                 logger.debug(f'downloaded illustration {id} to {temp_filepath}')
 
                 to_send = discord.File(temp_filepath)
@@ -91,3 +88,11 @@ def size_to_dl(illustration):
     else:
         size_to_download = None
     return size_to_download
+
+
+def get_first_child(dirpath):
+    path = None
+    for x in dirpath.iterdir():
+        path = x
+        break
+    return get_first_child(path) if path is not None and path.is_dir() else path
