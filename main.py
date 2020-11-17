@@ -1,16 +1,14 @@
 import sys
+from datetime import datetime
 
 import discord
 import pixivapi
 import tldextract
+from pytz import timezone, utc
 
 import log_utils
 import pixiv_utils
 import reddit_utils
-
-from datetime import datetime
-from pytz import timezone, utc
-
 
 '''
 Dockerize this on Ubuntu Server 20.04 LTS
@@ -23,7 +21,7 @@ cd bot-chan
 nohup python3 main.py <args> &
 '''
 
-TEST_MODE = True
+TEST_MODE = False
 discord_client = discord.Client()
 
 

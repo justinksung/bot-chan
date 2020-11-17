@@ -22,7 +22,12 @@ def init(client_id, client_secret, test_md):
 
 async def on_message(message, sfw_override):
     submission = client.submission(url=message.content)
+    tag_spoiler = sfw_override or submission.over_18
+
     if hasattr(submission, 'post_hint') and submission.post_hint == 'image':
-        await message.channel.send(submission.url)
+        msg = submission.url
+        if tag_spoiler:
+            msg = '||' + msg + '||'
+        await message.channel.send(msg)
     else:
         logger.debug(f'DEBUG skipping non-image reddit submission {submission.id}')
