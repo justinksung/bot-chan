@@ -1,3 +1,9 @@
+import pathlib
+import tempfile
+import urllib.request
+from urllib.parse import urlparse
+
+import discord
 import praw
 
 import log_utils
@@ -25,9 +31,18 @@ async def on_message(message, sfw_override):
     tag_spoiler = sfw_override or submission.over_18
 
     if hasattr(submission, 'post_hint') and submission.post_hint == 'image':
-        msg = submission.url
+        path = urlparse(submission.url).path.split("/")
+        filename = str(path[-1])
         if tag_spoiler:
-            msg = '||' + msg + '||'
-        await message.channel.send(msg)
+            filename = 'SPOILER_' + filename
+
+        with tempfile.TemporaryDirectory() as temp_dirname:
+            temp_dirpath = pathlib.Path(temp_dirname)
+            temp_filepath = temp_dirpath / filename
+
+            urllib.request.urlretrieve(submission.url, temp_filepath)
+
+            to_send = discord.File(temp_filepath)
+            await message.channel.send(file=to_send)
     else:
         logger.debug(f'DEBUG skipping non-image reddit submission {submission.id}')
