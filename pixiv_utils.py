@@ -47,12 +47,16 @@ async def on_message(message, sfw_override):
             with tempfile.TemporaryDirectory() as temp_dirname:
                 temp_dirpath = pathlib.Path(temp_dirname)
                 temp_filename = str(uuid.uuid4())
-                if tag_spoiler:
-                    temp_filename = 'SPOILER_' + temp_filename
                 illustration.download(temp_dirpath, size=size_to_download, filename=temp_filename)
 
-                temp_filepath = get_first_child(temp_dirpath)
+                temp_filepath = get_first_child(temp_dirpath, tag_spoiler)
                 logger.debug(f'downloaded illustration {id} to {temp_filepath}')
+
+
+                if tag_spoiler:
+                    old_filepath = str(temp_filepath)
+                    new_filepath = old_filepath.replace(temp_filepath.name, 'SPOILER_' + temp_filepath.name)
+                    temp_filepath = temp_filepath.replace(new_filepath)
 
                 to_send = discord.File(temp_filepath)
                 await message.channel.send(file=to_send)
@@ -90,9 +94,9 @@ def size_to_dl(illustration):
     return size_to_download
 
 
-def get_first_child(dirpath):
+def get_first_child(dirpath, tag_spoiler):
     path = None
     for x in dirpath.iterdir():
         path = x
         break
-    return get_first_child(path) if path is not None and path.is_dir() else path
+    return get_first_child(path, tag_spoiler) if path is not None and path.is_dir() else path
