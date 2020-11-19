@@ -36,10 +36,10 @@ async def on_message(message):
         return
     elif tldextract.extract(message.content).registered_domain == 'pixiv.net':
         logger.debug(f"routed message id={message.id} to pixiv handler")
-        await pixiv_utils.on_message(message, is_sfw_hours())
+        await pixiv_utils.on_message(message, sfw_mode())
     elif tldextract.extract(message.content).registered_domain == 'reddit.com':
         logger.debug(f"routed message id={message.id} to reddit handler")
-        await reddit_utils.on_message(message, is_sfw_hours())
+        await reddit_utils.on_message(message, sfw_mode())
     else:
         logger.debug(f'Unsupported messsage id={message.id}')
 
@@ -66,9 +66,9 @@ def channels_to_subscribe():
     return test_channels if TEST_MODE else live_channels
 
 
-def is_sfw_hours(current=None):
+def sfw_mode(current=None):
     time = current if current is not None else datetime.now(tz=utc).astimezone(timezone('US/Pacific'))
-    return 7 <= time.hour <= 18
+    return 1 <= time.isoweekday() <= 5 and 7 <= time.hour < 18
 
 
 if len(sys.argv) != 6:
