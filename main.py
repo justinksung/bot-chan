@@ -62,6 +62,7 @@ def channels_to_subscribe():
     live_channels = [
         760212029901504573,  # FGO / #fanart
         766729741599244288,  # Genshin Impact / #fanart
+        803710798543192096,  # Priconne / #fanart
     ]
     return test_channels if TEST_MODE else live_channels
 
