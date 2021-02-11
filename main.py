@@ -78,6 +78,6 @@ else:
     log_utils.load_config()
     logger = log_utils.get_logger(TEST_MODE)
 
-    pixiv_utils.init(pixivapi.Client(), sys.argv[4], sys.argv[5], TEST_MODE)
+    #pixiv_utils.init(pixivapi.Client(), sys.argv[4], sys.argv[5], TEST_MODE)
     reddit_utils.init(sys.argv[2], sys.argv[3], TEST_MODE)
     discord_client.run(sys.argv[1])
