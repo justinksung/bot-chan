@@ -3,9 +3,11 @@ from datetime import datetime
 
 import discord
 import pixivapi
+import re
 import tldextract
 from pytz import timezone, utc
 
+import cmd_utils
 import log_utils
 import pixiv_utils
 import reddit_utils
@@ -32,6 +34,8 @@ async def on_ready():
 
 @discord_client.event
 async def on_message(message):
+    cmd_match = re.compile('^\..+')
+
     if not is_valid_guild_msg(message):
         return
     elif tldextract.extract(message.content).registered_domain == 'pixiv.net':
@@ -40,6 +44,9 @@ async def on_message(message):
     elif tldextract.extract(message.content).registered_domain == 'reddit.com':
         logger.debug(f"routed message id={message.id} to reddit handler")
         await reddit_utils.on_message(message, sfw_mode())
+    elif cmd_match.match(message.content).group() is not None:
+        logger.debug(f"routed message id={message.id} to command handler")
+        await cmd_utils.on_message(message)
     else:
         logger.debug(f'Unsupported messsage id={message.id}')
 
@@ -49,22 +56,10 @@ def is_valid_guild_msg(message):
         return False
     elif message.guild.id != 735642741182169159:  # FGO server
         return False
-    elif message.channel.id not in channels_to_subscribe():
-        return False
+    elif TEST_MODE:
+        return message.channel.id == 774160071407697930   # Text Channels / #bot-chan-test
     else:
         return True
-
-
-def channels_to_subscribe():
-    test_channels = [
-        774160071407697930,  # Text Channels / #bot-chan-test
-    ]
-    live_channels = [
-        760212029901504573,  # FGO / #fanart
-        766729741599244288,  # Genshin Impact / #fanart
-        803710798543192096,  # Priconne / #fanart
-    ]
-    return test_channels if TEST_MODE else live_channels
 
 
 def sfw_mode(current=None):
